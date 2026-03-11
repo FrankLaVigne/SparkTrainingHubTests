@@ -1,6 +1,6 @@
 # Training Hub on DGX Spark
 
-Testing [Training Hub](https://pypi.org/project/training-hub/) fine-tuning algorithms on an NVIDIA DGX Spark — documenting what works, what breaks, and what's needed to get it running on ARM + Blackwell.
+Testing [Training Hub](https://github.com/Red-Hat-AI-Innovation-Team/training_hub) fine-tuning algorithms on an NVIDIA DGX Spark — documenting what works, what breaks, and what's needed to get it running on ARM + Blackwell.
 
 ## Hardware
 
@@ -47,7 +47,7 @@ The DGX Spark is bleeding-edge hardware. Expect these dependency issues:
 
 ## Stack
 
-- [Training Hub](https://pypi.org/project/training-hub/) 0.5.0
+- [Training Hub](https://github.com/Red-Hat-AI-Innovation-Team/training_hub) 0.5.0
 - [instructlab-training](https://github.com/instructlab/training) 0.14.1
 - [PEFT](https://github.com/huggingface/peft) 0.18.1
 - [TRL](https://github.com/huggingface/trl) 0.19.1
