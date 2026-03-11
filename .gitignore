@@ -1,0 +1,17 @@
+# Training outputs
+checkpoints/
+data/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+
+# Model caches
+*.bin
+*.safetensors
+
+# OS
+.DS_Store
