@@ -9,6 +9,9 @@ data/
 __pycache__/
 *.pyc
 
+# Unsloth compiled cache
+unsloth_compiled_cache/
+
 # Model caches
 *.bin
 *.safetensors
