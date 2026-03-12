@@ -12,15 +12,30 @@ Testing [Training Hub](https://github.com/Red-Hat-AI-Innovation-Team/training_hu
 | CUDA | 13.0 |
 | PyTorch | 2.10.0+cu130 |
 
-## Notebooks
+## Results
 
-| Notebook | Algorithm | Risk Level | Memory Estimate |
-|----------|-----------|------------|-----------------|
-| [01_lora_sft_spark.ipynb](01_lora_sft_spark.ipynb) | QLoRA + SFT (4-bit) | Low | 2.8–3.9 GB |
-| [02_sft_spark.ipynb](02_sft_spark.ipynb) | Full SFT | Medium | 44–57 GB |
-| [03_osft_spark.ipynb](03_osft_spark.ipynb) | OSFT | High | 37–48 GB |
+| Notebook | Algorithm | Memory Estimate | Status | Notes |
+|----------|-----------|-----------------|--------|-------|
+| [01_lora_sft_spark.ipynb](01_lora_sft_spark.ipynb) | QLoRA + SFT (4-bit) | 2.8–3.9 GB | **Passed** | Unsloth backend worked out of the box |
+| [02_sft_spark.ipynb](02_sft_spark.ipynb) | Full SFT | 44–57 GB | **Not run** | DeepSpeed installed but training not yet executed |
+| [03_osft_spark.ipynb](03_osft_spark.ipynb) | OSFT | 34.5–44.8 GB | **Failed** | `mini-trainer` hard-requires `flash_attn`, which can't build on this platform |
 
-All three notebooks fine-tune [ibm-granite/granite-3.3-2b-instruct](https://huggingface.co/ibm-granite/granite-3.3-2b-instruct) on the [sql-create-context](https://huggingface.co/datasets/b-mc2/sql-create-context) dataset (natural language to SQL).
+All three notebooks fine-tune [ibm-granite/granite-3.3-2b-instruct](https://huggingface.co/ibm-granite/granite-3.3-2b-instruct) on the [sql-create-context](https://huggingface.co/datasets/b-mc2/sql-create-context) dataset (natural language to SQL, 2000 examples).
+
+### Details
+
+**01 — LoRA+SFT (QLoRA):** The only method that completed successfully. Unsloth 2026.3.4 installed and imported without issues on ARM aarch64. Training Hub's `lora_sft()` ran with 4-bit quantization, LoRA r=16, batch size 8, 1 epoch on 2000 examples. All dependencies (unsloth, peft, bitsandbytes, trl, xformers) were available.
+
+**02 — Full SFT:** DeepSpeed 0.18.7 installed successfully (built from source with no pre-compiled CUDA ops — JIT compilation at runtime). flash-attn failed to build (CUDA toolkit 12.0 vs PyTorch CUDA 13.0 mismatch). The training cell was not executed yet.
+
+**03 — OSFT:** Failed at model setup. The `mini-trainer` backend unconditionally imports `flash_attn` in `setup_model_for_training.py:945`, and flash-attn cannot be compiled on this platform. liger-kernel 0.7.0 installed but had no `__version__` attribute. FSDP (PyTorch built-in) and Triton 3.6.0 were available.
+
+### Blocking Issues
+
+| Issue | Affects | Root Cause | Potential Fix |
+|-------|---------|------------|---------------|
+| `flash-attn` won't build | OSFT, possibly Full SFT | CUDA toolkit 12.0 vs PyTorch CUDA 13.0 mismatch | Upstream: make `flash_attn` import optional in `mini-trainer` |
+| `mini-trainer` hard-requires `flash_attn` | OSFT | Unconditional import in `setup_model_for_training.py` | Patch to fall back to SDPA attention |
 
 ## What's Inside
 
@@ -38,12 +53,12 @@ Each notebook follows the same narrative structure:
 
 The DGX Spark is bleeding-edge hardware. Expect these dependency issues:
 
-- **Unsloth** — no pre-built wheels for ARM aarch64
-- **DeepSpeed** — CUDA kernels don't support sm_121; may need `DS_BUILD_OPS=0`
-- **flash-attn** — no ARM + Blackwell wheels
-- **xformers** — no ARM wheels
-- **liger-kernel** — Triton support on ARM is evolving
-- **Compute capability 12.1** — PyTorch warns max supported is 12.0 (usually works anyway)
+- **Unsloth** — installed and works (2026.3.4)
+- **DeepSpeed** — installs (0.18.7) but no pre-compiled CUDA ops; JIT compiles at runtime
+- **flash-attn** — **won't build** (CUDA toolkit 12.0 vs PyTorch CUDA 13.0 mismatch) — this is the main blocker
+- **xformers** — installed and works (0.0.35)
+- **liger-kernel** — installed (0.7.0) but missing `__version__` attribute
+- **Compute capability 12.1** — PyTorch warns max supported is 12.0 (works anyway)
 
 ## Stack
 
